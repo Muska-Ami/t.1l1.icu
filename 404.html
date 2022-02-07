@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>页面跳转中...</title>
+  </head>
+  <body>
+    我们正在为您重定向至目标页面... 请稍等片刻。
+  </body>
+  <script>
+    // 兼容IE浏览器的Base64编码和解码
+    (function () {
+      var Base64;
+      if (window.atob) {
+        Base64 = window.Base64 || {
+          decode: function (input) {
+            return window.b64DecodeUnicode(input);
+          },
+        };
+      } else {
+        Base64 = window.Base64 || {
+          /* private property*/
+          _keyStr:
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+          /* public method for decoding */
+          decode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+            while (i < input.length) {
+              enc1 = Base64._keyStr.indexOf(input.charAt(i++));
+              enc2 = Base64._keyStr.indexOf(input.charAt(i++));
+              enc3 = Base64._keyStr.indexOf(input.charAt(i++));
+              enc4 = Base64._keyStr.indexOf(input.charAt(i++));
+              chr1 = (enc1 << 2) | (enc2 >> 4);
+              chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+              chr3 = ((enc3 & 3) << 6) | enc4;
+              output = output + String.fromCharCode(chr1);
+              if (enc3 != 64) {
+                output = output + String.fromCharCode(chr2);
+              }
+              if (enc4 != 64) {
+                output = output + String.fromCharCode(chr3);
+              }
+            }
+            output = Base64._utf8_decode(output);
+            return output;
+          },
+          /* private method for UTF-8 decoding */
+          _utf8_decode: function (utftext) {
+            var string = "";
+            var i = 0;
+            var c = (c1 = c2 = 0);
+            while (i < utftext.length) {
+              c = utftext.charCodeAt(i);
+              if (c < 128) {
+                string += String.fromCharCode(c);
+                i++;
+              } else if (c > 191 && c < 224) {
+                c2 = utftext.charCodeAt(i + 1);
+                string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                i += 2;
+              } else {
+                c2 = utftext.charCodeAt(i + 1);
+                c3 = utftext.charCodeAt(i + 2);
+                string += String.fromCharCode(
+                  ((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63)
+                );
+                i += 3;
+              }
+            }
+            return string;
+          },
+        };
+      }
+      window.Base64 = Base64;
+    })();
+  </script>
+  <script>
+    /**
+     * Configuration goes here
+     */
+    var FALLBACK_URL = "https://mcskin.cn";
+    var GITHUB_REPO = "hempflower/0sk.in";
+    var GITHUB_REPO_LINK =
+      "https://api.github.com/repos/" + GITHUB_REPO + "/contents/urls/";
+
+    /**
+     * DO NOT TOUCH ANYTHING BELOW THIS COMMENT UNLESS YOU KNOW WHAT YOU ARE DOING
+     */
+    function isUrl(url) {
+      // Regex from https://stackoverflow.com/a/3809435, with a modification to allow for TLDs of up to 24 characters
+      return /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,24}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)+$/.test(
+        url
+      );
+    }
+
+    function redirect() {
+      var location = window.location;
+      var urlName = location.pathname.split("/")[1];
+
+      var xhr = new XMLHttpRequest();
+
+      xhr.onload = function () {
+        try {
+          var payload = JSON.parse(xhr.response);
+          var message = payload.message;
+
+          if(message === "Not Found" ){
+            location.replace(FALLBACK_URL);
+          }
+
+          var rawUrl = window.Base64.decode(payload.content);
+
+          // Workaround IE 11 lack of support for new URL()
+          var url = document.createElement("a");
+          url.setAttribute("href", rawUrl);
+
+          // Invalid URLs includes invalid issue numbers, issue titles that are not URLs, and recursive destination URLs
+          var isInvalidUrl =  !isUrl(rawUrl);
+
+          if (isInvalidUrl) {
+            location.replace(FALLBACK_URL);
+          } else {
+            location.replace(rawUrl);
+          }
+        } catch (e) {
+          location.replace(FALLBACK_URL);
+        }
+      };
+
+      xhr.onerror = function () {
+        location.replace(FALLBACK_URL);
+      };
+      xhr.open("GET", GITHUB_REPO_LINK + urlName);
+      xhr.send();
+    }
+
+    redirect();
+  </script>
+</html>
