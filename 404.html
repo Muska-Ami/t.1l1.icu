@@ -13,7 +13,7 @@
       if (window.atob) {
         Base64 = window.Base64 || {
           decode: function (input) {
-            return window.b64DecodeUnicode(input);
+            return window.atob(input);
           },
         };
       } else {
@@ -110,14 +110,7 @@
           if(message === "Not Found" ){
             location.replace(FALLBACK_URL);
           }
-
           var rawUrl = window.Base64.decode(payload.content);
-
-          // Workaround IE 11 lack of support for new URL()
-          var url = document.createElement("a");
-          url.setAttribute("href", rawUrl);
-
-          // Invalid URLs includes invalid issue numbers, issue titles that are not URLs, and recursive destination URLs
           var isInvalidUrl =  !isUrl(rawUrl);
 
           if (isInvalidUrl) {
