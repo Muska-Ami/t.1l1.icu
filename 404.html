@@ -111,6 +111,8 @@
             location.replace(FALLBACK_URL);
           }
           var rawUrl = window.Base64.decode(payload.content);
+          rawUrl = rawUrl.replace('\n','');
+          rawUrl = rawUrl.replace(' ','');
           var isInvalidUrl =  !isUrl(rawUrl);
 
           if (isInvalidUrl) {
